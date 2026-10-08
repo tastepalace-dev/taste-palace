@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Taste Palace</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F7F5;--card:#fff;--ink:#16221F;--mute:#5E6F6A;--green:#0F4C45;--gold:#F2B134;--red:#C8402F;--line:#D9E2DE}
+@media (prefers-color-scheme:dark){:root{--bg:#0E1614;--card:#17231F;--ink:#EAF1EE;--mute:#97ABA5;--green:#5CC2B3;--line:#2A3A35}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;line-height:1.4}
+.wrap{max-width:480px;margin:0 auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom))}
+h1{font-size:26px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
+h2{font-size:17px;margin:22px 0 8px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:14px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.item .n{flex:1;font-weight:600}.p{color:var(--mute);font-size:13px;font-weight:400}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-family:inherit;font-weight:600;cursor:pointer;background:var(--gold);color:#16221F}
+.btn.big{width:100%;padding:13px;font-size:16px;margin-top:6px}
+.btn.off{background:var(--line);color:var(--mute);cursor:not-allowed}
+.btn.red{background:var(--red);color:#fff}.btn.ok{background:var(--green);color:#fff}
+@media (prefers-color-scheme:dark){.btn.ok{color:#0E1614}}
+.tag{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px}
+.tag.out{background:var(--red);color:#fff}.tag.in{background:var(--line);color:var(--ink)}
+input{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;margin-bottom:10px}
+.rate{display:flex;gap:6px;margin-bottom:10px}
+.rate button{flex:1;padding:12px 0;font-size:18px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink)}
+.rate button.on{background:var(--gold);border-color:var(--gold);color:#16221F}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;cursor:pointer}
+.chips button.on{background:var(--green);color:#fff;border-color:var(--green)}
+@media (prefers-color-scheme:dark){.chips button.on{color:#0E1614}}
+.empty{color:var(--mute);font-size:14px;padding:6px 0}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer;padding:0;margin-top:24px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Taste Palace</h1>
+  <p class="sub" id="status">Connecting...</p>
+
+  <section id="guest">
+    <h2 style="margin-top:0">Menu</h2>
+    <div id="menu" class="empty">Loading menu...</div>
+    <h2>Your order</h2>
+    <div id="cart" class="empty">Nothing added yet.</div>
+    <input id="where" placeholder="Room number or table (for example Room 12)" maxlength="30">
+    <button class="btn ok big" onclick="place()">Place order</button>
+    <div id="msg" class="empty"></div>
+    <div id="track"></div>
+
+    <h2>How was your stay?</h2>
+    <div class="rate" id="rate"></div>
+    <div class="chips" id="chips"></div>
+    <input id="comment" placeholder="Tell us more (optional)" maxlength="280">
+    <button class="btn big" onclick="sendFb()">Send feedback</button>
+    <div id="fmsg" class="empty"></div>
+    <button class="link" onclick="show('login')">Staff login</button>
+  </section>
+
+  <section id="login" class="hide">
+    <h2 style="margin-top:0">Staff login</h2>
+    <input id="em" type="email" placeholder="Email" autocomplete="username">
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="btn ok big" onclick="login()">Sign in</button>
+    <div id="lmsg" class="empty"></div>
+    <button class="link" onclick="show('guest')">Back to guest page</button>
+  </section>
+
+  <section id="staff" class="hide">
+    <h2 style="margin-top:0">Stock: tap when something finishes</h2>
+    <div id="stock" class="empty"></div>
+    <div id="seed"></div>
+    <h2>Add a menu item</h2>
+    <input id="newName" placeholder="Item name" maxlength="60">
+    <input id="newPrice" type="number" inputmode="numeric" placeholder="Price in naira">
+    <button class="btn big" onclick="addItem()">Add item</button>
+    <h2>Incoming orders</h2>
+    <div id="orders" class="empty">No orders yet.</div>
+    <h2>Guest feedback</h2>
+    <div id="fbs" class="empty">No feedback yet.</div>
+    <button class="link" onclick="logout()">Sign out</button>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyASyH8piorIip_wXn2iQ3enEy4IjBlK0Cg",
+  authDomain: "taste-palace-app.firebaseapp.com",
+  databaseURL: "https://taste-palace-app-default-rtdb.firebaseio.com",
+  projectId: "taste-palace-app",
+  storageBucket: "taste-palace-app.firebasestorage.app",
+  messagingSenderId: "1055526546403",
+  appId: "1:1055526546403:web:0589fcf7de665a95c94ed6"
+};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth(), db=firebase.database();
+var $=function(i){return document.getElementById(i)};
+var menu={},cart={},rating=0,cat='',isStaff=false,myUid=null,lastOrderRef=null;
+var SAMPLE=[['Jollof rice with chicken',3500],['Efo riro with assorted meat',3000],['Chicken shawarma',2800],['Meat pie',1000],['Pepper soup',2500],['Chapman',1500]];
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmt(n){return '\u20A6'+Number(n).toLocaleString()}
+function show(v){['guest','login','staff'].forEach(function(s){$(s).className=s==v?'':'hide'})}
+
+auth.onAuthStateChanged(function(u){
+  if(!u){auth.signInAnonymously().catch(function(e){$('status').textContent='Could not connect: '+e.message});return}
+  myUid=u.uid;isStaff=!u.isAnonymous;
+  $('status').textContent=isStaff?'Staff mode':'Order food and tell us how we are doing';
+  if(isStaff){show('staff');listenStaff()}else if($('staff').className!='hide'||$('login').className!='hide'){show('guest')}
+});
+db.ref('menu').on('value',function(s){menu=s.val()||{};drawMenu();if(isStaff)drawStock()},function(){$('menu').textContent='Could not load the menu. Check your connection.'});
+
+function items(){return Object.keys(menu).map(function(k){var m=menu[k];m.id=k;return m}).sort(function(a,b){return (a.name||'').localeCompare(b.name||'')})}
+function drawMenu(){
+  var it=items();
+  if(!it.length){$('menu').className='empty';$('menu').textContent='The menu is being set up. Please check back soon.';return}
+  $('menu').className='';
+  $('menu').innerHTML=it.map(function(i){
+    return '<div class="item"><div class="n">'+esc(i.name)+'<div class="p">'+fmt(i.price)+'</div></div>'+
+    (i.inStock?'<button class="btn" onclick="add(\''+i.id+'\')">Add</button>':'<span class="tag out">Finished</span> <button class="btn off" disabled>Add</button>')+'</div>'}).join('');
+  Object.keys(cart).forEach(function(id){if(!menu[id]||!menu[id].inStock)delete cart[id]});
+  drawCart();
+}
+function add(id){cart[id]=(cart[id]||0)+1;drawCart()}
+function clr(){cart={};drawCart()}
+function drawCart(){
+  var ids=Object.keys(cart),tot=0;
+  if(!ids.length){$('cart').className='empty';$('cart').textContent='Nothing added yet.';return}
+  $('cart').className='';
+  $('cart').innerHTML=ids.map(function(id){var m=menu[id];tot+=m.price*cart[id];return '<div class="item"><div class="n">'+cart[id]+' x '+esc(m.name)+'</div><div class="p">'+fmt(m.price*cart[id])+'</div></div>'}).join('')+
+   '<div style="display:flex;justify-content:space-between;font-weight:800;margin:4px 2px 10px"><span>Total</span><span>'+fmt(tot)+'</span></div><button class="btn red" onclick="clr()">Clear order</button>';
+}
+function place(){
+  var ids=Object.keys(cart),w=$('where').value.trim();
+  if(!ids.length){$('msg').textContent='Add at least one item first.';return}
+  if(!w){$('msg').textContent='Enter your room number or table.';return}
+  var tot=0,lines=ids.map(function(id){tot+=menu[id].price*cart[id];return cart[id]+' x '+menu[id].name});
+  var ref=db.ref('orders').push();
+  ref.set({where:w,lines:lines,total:tot,status:'new',uid:myUid,createdAt:firebase.database.ServerValue.TIMESTAMP})
+   .then(function(){$('msg').textContent='Order sent to the kitchen. We will bring it to '+w+'.';cart={};drawCart();watchOrder(ref)})
+   .catch(function(){$('msg').textContent='Order failed. Check your connection and try again.'});
+}
+function watchOrder(ref){
+  if(lastOrderRef)lastOrderRef.off();
+  lastOrderRef=ref;
+  ref.on('value',function(s){var o=s.val();if(!o)return;
+    $('track').innerHTML='<div class="item"><div class="n">Your latest order<div class="p">'+esc(o.lines.join(', '))+'</div></div><span class="tag '+(o.status=='done'?'in':'out')+'" style="'+(o.status=='done'?'':'background:var(--gold);color:#16221F')+'">'+(o.status=='done'?'Delivered':'Being prepared')+'</span></div>'});
+}
+function setRate(n){rating=n;drawFb()}
+function setCat(c){cat=c;drawFb()}
+function drawFb(){
+  $('rate').innerHTML=[1,2,3,4,5].map(function(n){return '<button class="'+(rating==n?'on':'')+'" onclick="setRate('+n+')">'+n+'</button>'}).join('');
+  $('chips').innerHTML=['Food','Service','Room','Pool and gym'].map(function(c){return '<button class="'+(cat==c?'on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>'}).join('');
+}
+function sendFb(){
+  if(!rating){$('fmsg').textContent='Tap a rating from 1 to 5 first.';return}
+  db.ref('feedback').push({rating:rating,category:cat||'General',comment:$('comment').value.trim(),createdAt:firebase.database.ServerValue.TIMESTAMP})
+   .then(function(){rating=0;cat='';$('comment').value='';drawFb();$('fmsg').textContent='Thank you. The manager has your feedback.'})
+   .catch(function(){$('fmsg').textContent='Could not send. Try again.'});
+}
+function login(){
+  var e=$('em').value.trim(),p=$('pw').value;
+  if(!e||!p){$('lmsg').textContent='Enter your email and password.';return}
+  auth.signInWithEmailAndPassword(e,p).then(function(){$('pw').value='';$('lmsg').textContent=''}).catch(function(){$('lmsg').textContent='Wrong email or password.'});
+}
+function logout(){db.ref('orders').off();db.ref('feedback').off();auth.signOut()}
+
+var staffOn=false;
+function listenStaff(){
+  if(staffOn)return;staffOn=true;
+  db.ref('orders').on('value',function(s){
+    var o=s.val()||{},k=Object.keys(o).sort(function(a,b){return (o[b].createdAt||0)-(o[a].createdAt||0)});
+    if(!k.length){$('orders').className='empty';$('orders').textContent='No orders yet.';return}
+    $('orders').className='';
+    $('orders').innerHTML=k.slice(0,30).map(function(id){var x=o[id];
+      return '<div class="item"><div class="n">'+esc(x.where)+' ('+fmt(x.total)+')<div class="p">'+esc((x.lines||[]).join(', '))+'</div></div>'+
+      (x.status=='done'?'<span class="tag in">Delivered</span>':'<button class="btn ok" onclick="done(\''+id+'\')">Delivered</button>')+'</div>'}).join('');
+  });
+  db.ref('feedback').on('value',function(s){
+    var f=s.val()||{},k=Object.keys(f).sort(function(a,b){return (f[b].createdAt||0)-(f[a].createdAt||0)});
+    if(!k.length){$('fbs').className='empty';$('fbs').textContent='No feedback yet.';return}
+    $('fbs').className='';
+    $('fbs').innerHTML=k.slice(0,30).map(function(id){var x=f[id];
+      return '<div class="item"><div class="n">'+x.rating+'/5 about '+esc(x.category)+(x.comment?'<div class="p">'+esc(x.comment)+'</div>':'')+'</div>'+(x.rating<=2?'<span class="tag out">Needs attention</span>':'')+'</div>'}).join('');
+  });
+}
+function done(id){db.ref('orders/'+id+'/status').set('done')}
+function toggle(id){db.ref('menu/'+id+'/inStock').set(!menu[id].inStock)}
+function drawStock(){
+  var it=items();
+  $('seed').innerHTML=it.length?'':'<button class="btn big" onclick="seed()">Load sample menu</button>';
+  $('stock').className=it.length?'':'empty';
+  if(!it.length){$('stock').textContent='No menu items yet.';return}
+  $('stock').innerHTML=it.map(function(i){return '<div class="item"><div class="n">'+esc(i.name)+'<div class="p">'+fmt(i.price)+'</div></div><span class="tag '+(i.inStock?'in':'out')+'">'+(i.inStock?'Available':'Finished')+'</span><button class="btn '+(i.inStock?'red':'ok')+'" onclick="toggle(\''+i.id+'\')">'+(i.inStock?'Mark finished':'Back in stock')+'</button></div>'}).join('');
+}
+function seed(){SAMPLE.forEach(function(s){db.ref('menu').push({name:s[0],price:s[1],inStock:true})})}
+function addItem(){
+  var n=$('newName').value.trim(),p=Number($('newPrice').value);
+  if(!n||!(p>0))return;
+  db.ref('menu').push({name:n,price:p,inStock:true}).then(function(){$('newName').value='';$('newPrice').value=''});
+}
+drawFb();
+</script>
+</body>
+</html>

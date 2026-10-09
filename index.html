@@ -206,5 +206,51 @@ function addItem(){
 }
 drawFb();
 </script>
-</body>
+<script>
+(function(){
+  /* ---------- Styles ---------- */
+  var css = `
+  body{background:radial-gradient(circle at 20% 0%,#14302b 0%,#0a1513 55%,#050b0a 100%) !important;}
+  #bubbles{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  #bubbles span{position:absolute;bottom:-80px;width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+    background:rgba(212,175,55,.10);border:1px solid rgba(212,175,55,.35);
+    animation:floatUp linear infinite}
+  @keyframes floatUp{
+    0%{transform:translateY(0) scale(.8);opacity:0}
+    10%{opacity:1}
+    100%{transform:translateY(-115vh) scale(1.1);opacity:0}}
+  body > *:not(#bubbles):not(script){position:relative;z-index:1}
+  .help{margin:28px 16px;padding:18px;border-radius:16px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.35);text-align:center}
+  .help h3{margin:0 0 10px;color:#f1e3b0}
+  .help a{display:inline-block;padding:12px 20px;border-radius:12px;
+    background:#d4af37;color:#1a1a1a;font-weight:700;text-decoration:none}
+  `;
+  var st = document.createElement("style");
+  st.textContent = css;
+  document.head.appendChild(st);
+
+  /* ---------- Floating food bubbles ---------- */
+  var box = document.createElement("div");
+  box.id = "bubbles";
+  document.body.prepend(box);
+  var icons = ["🍦","🌯","🍗","🍨","🥙","🍰"];
+  for (var i = 0; i < 14; i++) {
+    var s = document.createElement("span");
+    s.textContent = icons[i % icons.length];
+    s.style.left = (Math.random() * 92) + "%";
+    s.style.animationDuration = (12 + Math.random() * 14) + "s";
+    s.style.animationDelay = (-Math.random() * 20) + "s";
+    box.appendChild(s);
+  }
+
+  /* ---------- Help section ---------- */
+  var help = document.createElement("div");
+  help.className = "help";
+  help.innerHTML = '<h3>Need help?</h3>' +
+    '<a href="mailto:inquiry@tastepalacehotel.com?subject=Help%20request">Email us</a>';
+  document.body.appendChild(help);
+})();
+</script></body>
 </html>

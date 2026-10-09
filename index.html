@@ -252,5 +252,46 @@ drawFb();
     '<a href="mailto:inquiry@tastepalacehotel.com?subject=Help%20request">Email us</a>';
   document.body.appendChild(help);
 })();
+</script><script>
+(function(){
+  var BANK="Opay", ACCT="9130697122", NAME="Olamitide";
+  var EMAIL="inquiry@tastepalacehotel.com";
+  var WA=""; // optional: hotel WhatsApp like 2348012345678
+
+  var st=document.createElement("style");
+  st.textContent=".payc{margin:20px 16px;padding:16px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.4);position:relative;z-index:1;color:#e9f3f0}"+
+  ".payc h3{margin:0 0 10px;color:#f1e3b0}"+
+  ".payc input,.payc textarea{width:100%;box-sizing:border-box;padding:12px;margin:6px 0 10px;border-radius:10px;border:1px solid #2c423e;background:#0f1f1c;color:#fff;font-size:16px}"+
+  ".payc button{width:100%;padding:14px;border:0;border-radius:12px;background:#d4af37;color:#1a1a1a;font-weight:700;font-size:16px}"+
+  ".payc .acct{background:#14302b;border-radius:12px;padding:12px;margin-bottom:12px}";
+  document.head.appendChild(st);
+
+  var d=document.createElement("div");
+  d.className="payc";
+  d.innerHTML='<h3>Pay for your order</h3>'+
+  '<div class="acct">Bank: <b>'+BANK+'</b><br>Name: <b>'+NAME+'</b><br>Account: <b style="font-size:20px">'+ACCT+'</b><br>'+
+  '<button id="pcopy" style="margin-top:8px;padding:8px">Copy account number</button></div>'+
+  '<input id="proom" placeholder="Room number, e.g. Room 12">'+
+  '<textarea id="porder" rows="2" placeholder="Your order, e.g. 2 Jollof rice"></textarea>'+
+  '<input id="pamt" type="number" inputmode="numeric" placeholder="Amount paid (₦)">'+
+  '<button id="ppaid">I\'ve paid</button>'+
+  '<div id="pdone" style="display:none;margin-top:10px">Thank you! Staff will confirm your payment. ✅</div>';
+  document.body.appendChild(d);
+
+  document.getElementById("pcopy").onclick=function(){
+    if(navigator.clipboard)navigator.clipboard.writeText(ACCT);
+    this.textContent="Copied ✓";
+  };
+  document.getElementById("ppaid").onclick=function(){
+    var room=document.getElementById("proom").value.trim();
+    var order=document.getElementById("porder").value.trim();
+    var amt=document.getElementById("pamt").value;
+    if(!room||!order||!amt){alert("Please fill in room, order and amount.");return}
+    var msg="PAYMENT - AWAITING CONFIRMATION\nRoom: "+room+"\nOrder: "+order+"\nAmount: N"+amt;
+    document.getElementById("pdone").style.display="block";
+    if(WA){location.href="https://wa.me/"+WA+"?text="+encodeURIComponent(msg)}
+    else{location.href="mailto:"+EMAIL+"?subject="+encodeURIComponent("Payment - "+room)+"&body="+encodeURIComponent(msg)}
+  };
+})();
 </script></body>
 </html>

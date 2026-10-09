@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pay - Taste Palace</title>
+<style>
+body{margin:0;padding:18px;background:#0a1513;color:#e9f3f0;font-family:system-ui,sans-serif}
+h1{color:#f1e3b0;margin:0 0 4px}
+.box{background:#14302b;border:1px solid #d4af3759;border-radius:14px;padding:14px;margin:14px 0}
+label{display:block;margin:12px 0 4px;font-size:14px;opacity:.8}
+input,textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2c423e;background:#0f1f1c;color:#fff;font-size:16px}
+button,.btn{display:block;width:100%;padding:14px;margin-top:14px;border:0;border-radius:12px;background:#d4af37;color:#1a1a1a;font-weight:700;font-size:16px;text-align:center;text-decoration:none;box-sizing:border-box}
+.sm{width:auto;display:inline-block;padding:8px 14px;margin:6px 0 0;font-size:14px}
+#done{display:none;text-align:center}
+</style></head><body>
+<h1>Taste Palace</h1>
+<div>Pay by bank transfer</div>
+
+<div class="box">
+  <div>Bank: <b id="bk"></b></div>
+  <div>Account name: <b id="nm"></b></div>
+  <div>Account number: <b id="ac" style="font-size:22px"></b></div>
+  <button class="sm" onclick="copyAcc()" id="cp">Copy number</button>
+</div>
+
+<div id="form">
+  <label>Room number</label>
+  <input id="room" placeholder="e.g. Room 12">
+  <label>Your order</label>
+  <textarea id="order" rows="3" placeholder="e.g. 2 Jollof rice, 1 chicken shawarma"></textarea>
+  <label>Amount you paid (₦)</label>
+  <input id="amt" type="number" inputmode="numeric" placeholder="e.g. 6000">
+  <button onclick="paid()">I've paid</button>
+</div>
+
+<div id="done" class="box">
+  <h2>Thank you! ✅</h2>
+  <p>Staff will confirm your payment and start your order.</p>
+  <div id="sum"></div>
+</div>
+
+<script>
+var BANK="YOUR BANK", ACCT="0000000000", NAME="ACCOUNT NAME";
+var EMAIL="inquiry@tastepalacehotel.com";
+var WA=""; // optional: hotel WhatsApp like 2348012345678
+var $=function(i){return document.getElementById(i)};
+$("bk").textContent=BANK;$("nm").textContent=NAME;$("ac").textContent=ACCT;
+var r=new URLSearchParams(location.search).get("room");
+if(r)$("room").value=r;
+function copyAcc(){
+  if(navigator.clipboard)navigator.clipboard.writeText(ACCT);
+  $("cp").textContent="Copied ✓";
+}
+function paid(){
+  var room=$("room").value.trim(),order=$("order").value.trim(),amt=$("amt").value;
+  if(!room||!order||!amt||amt<=0){alert("Please fill in room, order and amount.");return}
+  var msg="PAYMENT - AWAITING CONFIRMATION\nRoom: "+room+"\nOrder: "+order+"\nAmount: N"+amt;
+  $("sum").innerText=msg;
+  $("form").style.display="none";$("done").style.display="block";
+  if(WA){location.href="https://wa.me/"+WA+"?text="+encodeURIComponent(msg)}
+  else{location.href="mailto:"+EMAIL+"?subject="+encodeURIComponent("Payment - "+room)+"&body="+encodeURIComponent(msg)}
+}
+</script>
+</body></html>
